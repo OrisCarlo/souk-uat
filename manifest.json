@@ -1,0 +1,16 @@
+{
+ "name": "Souk du Pirate · Entraînement",
+ "short_name": "Souk UAT",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#EDF3F2",
+ "theme_color": "#0E5E6F",
+ "icons": [
+  {
+   "src": "icon.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}
