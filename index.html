@@ -26,15 +26,23 @@
   }
   function cached() { if (!window.caches) return Promise.reject(); return caches.open(CK).then(function (c) { return c.match("page"); }).then(function (r) { if (!r) throw 0; return r.text(); }); }
   function keep(h) { try { if (window.caches) caches.open(CK).then(function (c) { c.put("page", new Response(h, { headers: { "Content-Type": "text/html" } })); }); } catch (e) {} }
-  fetch(API + "?raw=1&v=" + Date.now(), { cache: "no-store" })
-    .then(function (r) { if (!r.ok) throw 0; return r.text(); })
-    .then(function (h) { if (h.indexOf("zxing") < 0) throw 0; keep(h); show(h); })
-    .catch(function () {
-      cached().then(show).catch(function () {
-        document.getElementById("b").innerHTML = "<div>Pas de réseau.<br><small style='font-weight:400'>Nouvel essai dans 4 secondes…</small></div>";
-        setTimeout(function () { location.reload(); }, 4000);
-      });
-    });
+  var channel = crypto.randomUUID(), frame = document.createElement("iframe"), done = false;
+  frame.hidden = true; frame.title = "Connexion Google";
+  function finish(h) { if (done) return; done = true; clearTimeout(timer); window.removeEventListener("message", receive); frame.remove(); keep(h); show(h); }
+  function fail() {
+    if (done) return;
+    document.getElementById("b").innerHTML = '<div>Connexion à Google indisponible.<br><small>Les scans mémorisés sur cet appareil sont conservés.</small><br><button onclick="location.reload()">Réessayer</button></div>';
+  }
+  function receive(e) {
+    var m=e.data;
+    if (!m || m.soukBridge !== channel || !/^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/.test(e.origin)) return;
+    if (m.type === "page" && typeof m.html === "string" && m.html.indexOf('connectMobile') >= 0) finish(m.html);
+    else if (m.type === "page-error") fail();
+  }
+  window.addEventListener("message", receive);
+  var timer=setTimeout(fail,30000);
+  frame.src=API+"?bridge="+encodeURIComponent(channel)+"&bootstrap=1";
+  document.body.appendChild(frame);
 })();
 </script>
 </body>
